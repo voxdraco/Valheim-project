@@ -18,3 +18,9 @@ kubectl and a working kubernetes node/cluster
 
 I will go through the process and explain why I have done things the way I have. Please keep in mind this is the first time I have ever published a project like this ti github.
 
+Lets start off by going over the Dockerfile inside the docker-files directory as this is the first project thing you need create if you want to use this.
+
+
+...
+test
+...
