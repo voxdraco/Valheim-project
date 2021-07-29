@@ -1,0 +1,49 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: valheim-server
+spec:
+ selector:
+  matchLabels:
+   name: valheim-server
+   app: valheim-server
+ replicas: 1
+ template:
+  metadata:
+   labels:
+    name: valheim-server
+    app: valheim-server
+  spec:
+   securityContext:
+    fsGroup: 1000
+   containers:
+    - image: node01:31320/valheim-server:1.0
+      imagePullPolicy: Always
+      name: valheim-server
+      env:
+       - name: SERVERNAME
+         value: "voxs-little-server"
+       - name: PORT
+         value: "2456"
+       - name: PASSWORD
+         value: "projectilevomit"
+      ports:
+       - containerPort: 2456
+         name: gameport
+       - containerPort: 2457
+         name: queryport
+      resources:
+       requests:
+        memory: "6000Mi"
+        cpu: "500m"
+       limits:
+        memory: "6000Mi"
+        cpu: "500m"
+      volumeMounts:
+       - mountPath: /home/steam/.config/unity3d/IronGate/Valheim
+         name: valheim-data
+   volumes:
+    - name: valheim-data
+      persistentVolumeClaim:
+       claimName: valheim-volume-claim 
+  
