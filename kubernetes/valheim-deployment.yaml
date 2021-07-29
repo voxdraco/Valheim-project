@@ -26,7 +26,7 @@ spec:
        - name: PORT
          value: "2456"
        - name: PASSWORD
-         value: "projectilevomit"
+         value: "PASSWORD"
       ports:
        - containerPort: 2456
          name: gameport
