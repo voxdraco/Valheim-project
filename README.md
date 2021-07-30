@@ -59,3 +59,29 @@ RUN groupadd --gid 1000 steam
 RUN useradd --uid 1000 --gid steam --shell /bin/bash --create-home steam
 
 ```
+Next, the non-free debian repo is added and thats because steamcmd is non-free.
+
+```
+RUN apt-add-repository non-free
+
+RUN apt-get update
+
+```
+
+Next we add i368 packages because one of the language libraries we use later down the line needs it added.
+
+```
+RUN dpkg --add-architecture i386
+
+RUN apt-get update
+```
+
+We need to add an answer to the debconf-set-selections file
+
+```
+RUN echo steam steam/question select "I AGREE" | debconf-set-selections
+
+RUN echo steam steam/licence note '' | debconf-set-selections
+```
+
+
