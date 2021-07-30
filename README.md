@@ -84,6 +84,12 @@ RUN echo steam steam/question select "I AGREE" | debconf-set-selections
 RUN echo steam steam/licence note '' | debconf-set-selections
 ```
 
+Here we install steamcmd and lib32gcc1. Lib32gcc1 is required for when steamcmd installs valheim.
+
+```
+RUN apt-get -y install steamcmd lib32gcc1
+```
+
 Next, I am not entirely sure its required however steams own documentation reccordmend it. All I am doing here is creating a symlink between where the steamcmd binery sits and the steam users home directory.
 
 ```
@@ -96,5 +102,65 @@ Here we set the working directory as the /home/steam directory inside the contai
 WORKDIR /home/steam
 ```
 
+Next we copy over the entrypoint.sh script into the working directory we just set (ill go into what this does later on).
 
+```
+COPY entrypoint.sh entrypoint.sh
+```
+
+We need to make it executible (because its a script, duh)
+
+```
+RUN chmod +x entrypoint.sh
+```
+
+Next we do the same two things for the Installupdate.sh script
+
+```
+
+RUN chmod +x InstallUpdate.sh
+
+RUN chown steam:steam InstallUpdate.sh
+
+```
+
+This next bit makes the docker container run everything as the steam user itself. Up until this point, its been doing everything as root. The next line will also make sure the working dir is still set.
+
+```
+USER steam
+WORKDIR /home/steam
+```
+
+Next, for data to be persistent we must create a directory where data will run on the games first run. Normally this is taken care of by steamcmd running valheim for the first time but because we will be instructing kubernetes to mount the location where the game data is stored (remeber all data on a containter is lost when it terminates) we must create it before valheims dedicated server starts. If the directory does not exist when kubernetes tries to mount the persistant volume, it will cause and error and stop.
+
+```
+RUN mkdir -p /home/steam/.config/unity3d/IronGate/Valheim
+```
+
+The InstallUpdate.sh script is ran next. The contents of this script is below.
+
+This command not only updates the game, but installs it. 
+
+```
+#!/bin/bash
+/home/steam/steamcmd +@sSteamCmdForcePlatformType linux +login anonymous +force_install_dir /home/steam +app_update 896660 validate +quit
+```
+
+Here is the script running
+
+```
+RUN ./InstallUpdate.sh
+```
+
+We need to expose the ports the game will be running on to allow outside communication from the container. In this case, its UDP ports 2456-2458. The game strictly runs on 2456 because of the entrypoint script which you will see in a moment, but steam servers will also talk to the container on 2457 and 2458. It's used to probe the service to gather information, such as the server name. This is then used to list it on public server lists.
+
+```
+EXPOSE 2456-2458/udp
+```
+
+Lastly at the end of the docker file, we execute the entrypoint script. This is the script that starts when the container starts and if this process should terminate inside the container, the container will terminate. So if your container does not start, there is a good chance its having issues launching this script for some reason.
+
+```
+ENTRYPOINT ["./entrypoint.sh"]
+```
 
