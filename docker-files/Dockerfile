@@ -74,9 +74,5 @@ RUN ./InstallUpdate.sh
 # exposing ports for the game
 EXPOSE 2456-2458/udp
 
-EXPOSE 9001/tcp
-
-EXPOSE 80/tcp
-
 # lastly launching the entrypoint script.
 ENTRYPOINT ["./entrypoint.sh"]
