@@ -6,6 +6,15 @@ In this I will be going over simple project I worked on to spin up a valheim con
 
 If you are attempting to do this yourself, you need to configure a kubernetes cluster yourself first AND a registry where the containters can sit. 
 
+kubernetes cluster: https://www.virtualizationhowto.com/2021/06/kubernetes-home-lab-setup-step-by-step/
+
+registry: https://www.linuxtechi.com/setup-private-docker-registry-kubernetes/
+
+Who this is for:
+
+People who are starting out. This container and kubentes configuration are very simple and I attempt to keep it that way, however I do realize that there will be instances where I do things which might make you ask why and if this is the case, I will try and explain it.
+
+
 
 -----------------
 
