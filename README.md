@@ -164,3 +164,8 @@ Lastly at the end of the docker file, we execute the entrypoint script. This is 
 ENTRYPOINT ["./entrypoint.sh"]
 ```
 
+-----------------
+
+Next I will go into the contents of the entrypoint.sh script.
+
+
