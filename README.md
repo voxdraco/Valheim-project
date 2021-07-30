@@ -76,12 +76,25 @@ RUN dpkg --add-architecture i386
 RUN apt-get update
 ```
 
-We need to add an answer to the debconf-set-selections file
+We need to add an answer to the debconf datatbase with answers. The purpose of this, is that some packages require more then a YES or NO answer when they are being installed. steamcmd is such a package. An "I AGREE" answer needs to be given and the licence needs to be skipped to the next page, this will ensure that this is done properly when the package is installed.
 
 ```
 RUN echo steam steam/question select "I AGREE" | debconf-set-selections
 
 RUN echo steam steam/licence note '' | debconf-set-selections
 ```
+
+Next, I am not entirely sure its required however steams own documentation reccordmend it. All I am doing here is creating a symlink between where the steamcmd binery sits and the steam users home directory.
+
+```
+RUN ln -s /usr/games/steamcmd /home/steam/steamcmd
+```
+
+Here we set the working directory as the /home/steam directory inside the container. This can be skipped if you wanted to use a full path for the next few commands but I just found it easier this way.
+
+```
+WORKDIR /home/steam
+```
+
 
 
