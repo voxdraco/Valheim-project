@@ -37,9 +37,16 @@ RUN locale-gen en_GB.UTF-8
 
 ```
 
-This next bit is important. When you first create a user in debian, it defaults to the user group 1000 and user ID 1000. This assures that its ALWAYS set to this for future prosparity. The reason gid/uid 1000 is important is because of the way kubernetes 
+The next two lines create a user and set its gid, uid, shell and tell it to create a home directory.
+
+This next bit is important. When you first create a user in debian, it defaults to the user group 1000 and user ID 1000. This assures that its ALWAYS set to this for future prosparity. The reason gid/uid 1000 is important is because of the way kubernetes persistant data storage works. Valheim needs to save data, it goes without saying... but in order to do that the user ID and the GID MUST be the same as the persistent volumes location on the host so it has permission to write to it. 
+
+In the example you will see down the line, there is a persistent volume configured in /home/vox/valhiem-data on the host. That directory is owned by the user "vox" which has a uid/gid of 1000. The steam user that gets created on the container also has a uid/gid of 1000. Next when the kubenetes pod is created (later in this guide), the containter is ran with the option fsgroup: 1000. What that will ensure is that all procesees inside the container are ran as uid/gid 1000. Since the volume at /home/vox/valheim-data is owned by a user with the same uid/gid, the container will be able to write to it.
 
 
 ```
 RUN groupadd --gid 1000 steam
+
+RUN useradd --uid 1000 --gid steam --shell /bin/bash --create-home steam
+
 ```
