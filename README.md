@@ -192,4 +192,38 @@ The -public 1 flag makes the server pulicaly avaiable on valheims server list. I
 export LD_LIBRARY_PATH=$templdpath
 ```
 
+If you tried to run this container as is at the moment, it would fail. You need to change the enviroment veriables in the entrypoint script to something useable, however you can assign veriables on the same command when you lauch the container if you wish. That would get around it, for example:-
 
+```
+docker run --env VARIABLE1=foobar debian:buster env
+```
+
+Once you create this docker container (docker build -t valhiem-container .) you will need to upload it to a registry you have access too. You need to set this up yourself first to get this to work.
+
+--------------------
+
+Next we will look at the actual kuberntes yaml files bit by bit. This is where it can get a bit more complicated.
+
+There are a few things you need to understand when creating and using a kubernetes file. Its a requirement that you assign an apiVersion, kind, metedata and spec.
+
+A pod is the container that runs on the host, the host is reffered to as a node.
+
+This kind of pod is going to be ran as a deployment with 1 replica. A deployment is a way of making the kubernetes scheduler make sure that this pod is always running. If it should fail, it will spin it back up. If you set more then 1 replica, it will spin up two containers inside the pod, but for this game that wont work. Infact it will break it. This is very advantageous for use in web development because if you wanted too you could create 10 replicas in one pod and all requests will de load balanced between them. If each container is serving the same static files or are running the same application and one container explodes, kubernetes will create a new container. 
+
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+ name: valheim-server
+spec:
+ selector:
+  matchLabels:
+   name: valheim-server
+   app: valheim-server
+ replicas: 1
+ template:
+  metadata:
+   labels:
+    name: valheim-server
+    app: valheim-server
+```
