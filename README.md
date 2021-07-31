@@ -168,4 +168,28 @@ ENTRYPOINT ["./entrypoint.sh"]
 
 Next I will go into the contents of the entrypoint.sh script.
 
+The shbang is set to bash, not much to explain there. The three exports set some variables which steamcmd uses as it runs. Do not edit these. The appID is for valheim. 
+
+```
+#!/bin/bash
+export templdpath=$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=./linux64:$LD_LIBRARY_PATH
+export SteamAppID=892970
+```
+
+The next line is a bit of a hack. All it does is make sure that when the entrypoint script is ran (when the container starts) it will make sure the game is up to date. This saves you having to rebuild the container and re-upload it to a registry whenever the game updates. NOTE: it will take a longer and longer amount of time to start the container due to this so it's still good practice to rebuild the container every so often.
+
+```
+/home/steam/steamcmd +@sSteamCmdForcePlatformType linux +login anonymous +force_install_dir /home/steam +app_update 896660 validate +quit
+```
+
+This next bit is what starts the actual dedicated server. You will notice that the name, port and password are set as ${EXAMPLE}. This is so we can set veriables in the kubernetes config later on. 
+
+The -public 1 flag makes the server pulicaly avaiable on valheims server list. If you set it to 0, it wont show up.
+
+```
+/home/steam/valheim_server.x86_64 -name ${SERVERNAME} -port ${PORT} -world "Dedicated" -password ${PASSWORD} -public 1
+export LD_LIBRARY_PATH=$templdpath
+```
+
 
