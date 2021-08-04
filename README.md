@@ -204,6 +204,8 @@ Once you create this docker container (docker build -t valhiem-container .) you 
 
 Next we will look at the actual kuberntes yaml files bit by bit. This is where it can get a bit more complicated.
 
+The first one we look at is the valheim-deployment.yaml in the kubernetes directory.
+
 There are a few things you need to understand when creating and using a kubernetes file. Its a requirement that you assign an apiVersion, kind, metedata and spec.
 
 A pod is the container that runs on the host, the host is reffered to as a node.
