@@ -208,7 +208,9 @@ There are a few things you need to understand when creating and using a kubernet
 
 A pod is the container that runs on the host, the host is reffered to as a node.
 
-This kind of pod is going to be ran as a deployment with 1 replica. A deployment is a way of making the kubernetes scheduler make sure that this pod is always running. If it should fail, it will spin it back up. If you set more then 1 replica, it will spin up two containers inside the pod, but for this game that wont work. Infact it will break it. This is very advantageous for use in web development because if you wanted too you could create 10 replicas in one pod and all requests will de load balanced between them. If each container is serving the same static files or are running the same application and one container explodes, kubernetes will create a new container. 
+This kind of pod is going to be ran as a deployment with 1 replica. A deployment is a way of making the kubernetes scheduler make sure that this pod is always running. If it should fail, it will spin it back up. If you set more then 1 replica, it will spin up two containers inside the pod, but for this game that wont work. Infact it will break it. This is very advantageous for use in web development because if you wanted too you could create 10 replicas in one pod and all requests will de load balanced between them. If each container is serving the same static files or are running the same application and one container explodes, kubernetes will create a new container. The indentations need to be correct when you set this up and its very helpful to understand how yaml files work before you do this.
+
+The app field needs to be consistant between there differnt bits of this pod because this is what it will target to to load balancing and connect services too.
 
 ```
 apiVersion: apps/v1
@@ -227,3 +229,55 @@ spec:
     name: valheim-server
     app: valheim-server
 ```
+
+I mentioned before that because this kubernetes cluster is going to use a persisntent local volume, it needs to be able to write to the volume. The fsGroup needs to be set to 1000 for this to work. Please see my previous explination on this on line 51.
+
+```
+  spec:
+   securityContext:
+    fsGroup: 1000
+``` 
+
+This bit below tells the node what the image name is and where its located. As you can see, my registry is located on a host called node01, and its listening on port 31320.  The image name is what I personally called mine when I pushed my finished docker container.
+
+The pull policy here is a preference. If its set to always, whenever the container is launched the node will check with the registry to see if the image specified has the same digest as the one already pulled. If it's different, it will pull it again.
+
+```
+   containers:
+    - image: node01:31320/valheim-server:1.0
+      imagePullPolicy: Always
+      name: valheim-server
+```
+
+Below are the enviroment veriables we need to set for our server. These were coded into the Dockerfile and here we set them, It's pretty self explanitory.
+
+```
+      env:
+       - name: SERVERNAME
+         value: "voxs-little-server"
+       - name: PORT
+         value: "2456"
+       - name: PASSWORD
+         value: "PASSWORD"
+ ```
+ Ports are also pretty self explanitory, this will tell the container what ports need to exposed, this is so network traffic can reach the container. 
+ 
+ NOTE: This should not be treated like a ACL, its nothing lie a proper firewall rule. containers can reach out to whatever they want using the hosts own networking. If you want to secure outbound traffic, you need to do it another way. This is purely so inbound traffic can get into the container. Also, you still need to set up a network service to do the rest of this. Exposing a port on its own is not enough so keep reading.
+ 
+ ```
+      ports:
+       - containerPort: 2456
+         name: gameport
+       - containerPort: 2457
+         name: queryport
+```
+
+```
+      resources:
+       requests:
+        memory: "6000Mi"
+        cpu: "500m"
+       limits:
+        memory: "6000Mi"
+        cpu: "500m"
+ ```
