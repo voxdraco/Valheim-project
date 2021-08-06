@@ -208,7 +208,7 @@ The first one we look at is the valheim-deployment.yaml in the kubernetes direct
 
 There are a few things you need to understand when creating and using a kubernetes file. Its a requirement that you assign an apiVersion, kind, metedata and spec.
 
-A pod is the container that runs on the host, the host is reffered to as a node.
+A pod is the container or group of containers that are defined to run in a config file, that runs on the host, the host is reffered to as a node.
 
 This kind of pod is going to be ran as a deployment with 1 replica. A deployment is a way of making the kubernetes scheduler make sure that this pod is always running. If it should fail, it will spin it back up. If you set more then 1 replica, it will spin up two containers inside the pod, but for this game that wont work. Infact it will break it. This is very advantageous for use in web development because if you wanted too you could create 10 replicas in one pod and all requests will de load balanced between them. If each container is serving the same static files or are running the same application and one container explodes, kubernetes will create a new container. The indentations need to be correct when you set this up and its very helpful to understand how yaml files work before you do this.
 
