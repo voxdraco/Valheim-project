@@ -274,6 +274,14 @@ Below are the enviroment veriables we need to set for our server. These were cod
          name: queryport
 ```
 
+Below we have set a resource limit and request on the total cpu and memory the container can use. A request is what the container is garenteed to get. It will be reserved for it. You cannot have more requested resources then the node is capable of. For example if you have 12 gig of memory but request two containers are assigned 7 gig each, which ever pod starts first will get 7 gig, the next wont start at all.
+
+Limits are simply a limit on how much a container is allowed to use. For example if you set a request for 1 gig but a limit at 4 gig of memory, if the container goes over 4 gig, it will be terminated. 
+
+Memory is easier to understand because its simply done in mebibiyes (which is very similar to megabytes). CPU resources on the other hand are defined by millicores. 1 total cpu core is defined at 1000m, two cpu cores would be 2000m, 250m would equate to 1/4th of a single cpu core. Valheim is single threaded so there isnt any point in giving it more then 1 core, but is you are running more then 1 of these instances, its best to limit it. 
+
+By default a pod has no restrictions on memory and 100m cpu resources. Valheim doesnt need much unless there are a lot of players. I have been very genours with memory and cpu here. I didn't need to assign much but I wanted to make sure there was always enough if it ever got crowded. 
+
 ```
       resources:
        requests:
@@ -282,4 +290,14 @@ Below are the enviroment veriables we need to set for our server. These were cod
        limits:
         memory: "6000Mi"
         cpu: "500m"
+ ```
+ 
+ ```
+       volumeMounts:
+       - mountPath: /home/steam/.config/unity3d/IronGate/Valheim
+         name: valheim-data
+   volumes:
+    - name: valheim-data
+      persistentVolumeClaim:
+       claimName: valheim-volume-claim 
  ```
