@@ -292,6 +292,14 @@ By default a pod has no restrictions on memory and 100m cpu resources. Valheim d
         cpu: "500m"
  ```
  
+ This is where we define how our persistent storage works. Earlier on I mentioned that the dockerfile creates a directory so it can be mounted when the container starts and here is why we do this.
+ 
+ the mountPath definition tells kubernetes where to mount a directory from inside the container itself. When you do this, you need to give the mount a name so the next section (volumes) will know what volume is going to be mounted from the host to this specified directory. In order to make this work, you need to create a volume claim which is something I will go into later on.
+ 
+ It should be noted that the way I have done this, is bad practice for a production enviroment. For me, since this needs to be fast and its running on a physical server not in the cloud somewhere and there is only one node, this works fine for me. I just need to make sure its backed up because that is it's biggest weakness.
+
+ You have several options when it comes to persistant data, the most popular one being a bucket in either aws, azure or gcp, but you can do others such as gluster, nfs and iscsi and many more. You will need to work out whats best for your use case.
+ 
  ```
        volumeMounts:
        - mountPath: /home/steam/.config/unity3d/IronGate/Valheim
@@ -301,3 +309,50 @@ By default a pod has no restrictions on memory and 100m cpu resources. Valheim d
       persistentVolumeClaim:
        claimName: valheim-volume-claim 
  ```
+
+----------------------
+
+Now we will look at the service definition file, (valheim-service.yaml)
+
+There isn't much in here, so I can go over it all at once. 
+
+Kind needs to be set as Service, which will instruct kubernetes that this is a service, not a container. You need to set a name obviously.
+
+If you remeber, I set the ports in valheim to 2456 and 2457, both udp. 
+
+In kubernetes, you need to udnerstand how traffic gets from the hosts interface to the container. Simply put, traffic doesn't just go into the hosts network interface and go stright to a container, it will instead hit the Kube-Proxy service then it will go to your container. There are a few additional steps it takes if you really want to drill down, such as how nodes and send traffic to one another if a particular container exists elsewhere, or how it uses iptables but we dont need to know that for this.
+
+What you need to understand for this is what nodePort, port, and targetPort mean. 
+
+The nodeport is the port the node (host) is going to be listening on or more specifically, where kube-proxy is listening on the node, the port is where kube-proxy sends traffic OUT from and the targetPort is where kube-proxy sends traffic too.
+
+So in my example the valheim service is expecting traffic on port 31000 and 31001. This is because my gateway is port forwarding traffic from 2456 and 2457 to 31000 and 31001. Traffic reaches the node on 31000 and 31001 and then the service listening on that node, kube-proxy picks up that traffic. Kube-proxy then sends the traffic back out on port 2456 and 2457 respectivly and sends it to port 2456 and 2457 on the target container. NOTE: there is a trap here. If you have more then one container, the port value MUST be different per service. If you specify the same port, it will break because when the container responds to the port you specified it will cause a conflict. The kube-proxy will just send traffic back out of the node as instructed but you can't run multiple services on the same port, thats going to cause things to go wrong. 
+
+```
+apiVersion: v1
+kind: Service
+metadata:
+ name: valheim-server
+spec:
+ ports:
+  - name: gameport
+    nodePort: 31000
+    port: 2456
+    targetPort: 2456
+    protocol: UDP
+
+  - name: queryport
+    nodePort: 31001
+    port: 2457
+    targetPort: 2457
+    protocol: UDP
+
+
+```
+The LoadBalancer type is pretty self explanitory, it works like any load balancer. If you have multiple containers, it will just split traffic amoung them. The app value is what links this service to the deployment file we made earlier using the "app: valheim-server" label. 
+
+```
+ type: LoadBalancer
+ selector:
+  app: valheim-server
+```
