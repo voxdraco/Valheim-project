@@ -349,7 +349,7 @@ spec:
 
 
 ```
-The LoadBalancer type is pretty self explanatory, it works like any load balancer. If you have multiple containers, it will just split traffic among them. The app value is what links this service to the deployment file we made earlier using the "app: valheim-server" label.
+The LoadBalancer type is pretty self explanatory, it works like any load balancer. If you have multiple containers, it will just split traffic among them. The app value is what links this service to the deployment file we made earlier using the "app: valheim-server" label. Other then that, you dont need to worry much about this for the purposes we are using it.
 
 ```
  type: LoadBalancer
@@ -357,4 +357,67 @@ The LoadBalancer type is pretty self explanatory, it works like any load balance
   app: valheim-server
 ```
 
+-------------------
 
+The next file we will look at is the yaml file for the volume where the sames persistant data is stored.
+
+In this file we need to specify that this is fot a persistent volume. As said earlier, there are many kinds of volume types. For our purposes, since we only have one node, we are using local as the type. This is how it sounds, the node will use local storage. You need to take note of the claim name in here for when you go to use it in a deployment and a volume claim (which I will go into shortly)
+
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+ name: valheim-data
+ labels:
+  type: local
+```
+
+The storageClassName is basically a way of tagging a volume as a type you make up yourself. For example if you create a 10 volumes on a slow storage system, you could call it "slow" and then whenever you make a claim but do not reference a specific volume, it will take a pick from whatever you set here. If the claim is for a "slow" storage, it will pick one at random.
+
+You can also use this (like I have) to target specific volumes, for example I called mine "manual", and if there is only one volume with this tag/name, it will only use that one.
+
+capacity speaks for itself
+
+accessModes sets what can access the volume and how many nodes/how. ReadWriteOnce means this volume can only be mounted by one node at a time, note that this is the only option for a single node.
+
+The hostpath denotes where the actual data is going to sit on the host and where the volume is located. All data written to tgis volume by the container will land in /home/vox/valheim-data on the node.
+
+```
+ storageClassName: manual
+ capacity:
+  storage: 50Gi
+ accessModes:
+  - ReadWriteOnce
+ hostPath:
+  path: "/home/vox/valheim-data"
+  
+```
+
+---------
+
+We're almost there now, at the very end of the kubernetes files. We still have a bit more to cover however after.
+
+This one is quite short, this is the volume-claim which needs to be defined inside the deployment yaml. 
+
+The whole purpose of this yaml is to create a claim on an already existing volume which you can link to a pod. You will notice in the volume section of the deployment file it mentions just the volume claim and where the data will end up inside the container, it doesnt mention anything to do with the volume yaml itself.
+
+The only bits you need to take note of here is the claim requests storage and the kind is different. Everything else is almost identical to a volume yaml. 
+
+
+```
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+ name: valheim-volume-claim
+spec:
+ storageClassName: manual
+ accessModes:
+  - ReadWriteOnce
+ resources:
+  requests:
+   storage: 50Gi
+```
+
+------------
+
+So! We have reached the end of the kubernetes yaml files. Next we will go over a few things you should set up so you can back up your game and assure the game is up to date.
