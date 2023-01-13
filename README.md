@@ -419,5 +419,8 @@ spec:
 ```
 
 ------------
+So we have reached the and of the main guide. 
 
-So! We have reached the end of the kubernetes yaml files. Next we will go over a few things you should set up so you can back up your game and assure the game is up to date.
+To do:-
+
+Add instructions on how to set up automatic backups
